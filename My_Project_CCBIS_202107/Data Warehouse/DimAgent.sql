@@ -1,0 +1,23 @@
+USE [CCBISDW]
+GO
+
+/****** Object:  Table [dbo].[DimAgent]    Script Date: 7/10/2021 11:58:04 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[DimAgent](
+	[AgentID] [int] NOT NULL,
+	[FirstName] [varchar](255) NULL,
+	[LastName] [varchar](255) NULL,
+	[Group] [varchar](255) NULL,
+	[Location] [varchar](255) NULL,
+ CONSTRAINT [PK__Agent__9AC3BFD1DC51FAEF] PRIMARY KEY CLUSTERED 
+(
+	[AgentID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+

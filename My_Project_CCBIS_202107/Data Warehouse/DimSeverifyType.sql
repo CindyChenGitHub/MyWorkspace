@@ -1,0 +1,20 @@
+USE [CCBISDW]
+GO
+
+/****** Object:  Table [dbo].[DimSeverifyType]    Script Date: 7/10/2021 5:07:41 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[DimSeverifyType](
+	[SeverityType_Key] [int] NOT NULL,
+	[SeverityType_Desc] [varchar](10) NULL,
+ CONSTRAINT [PK__Severify__E3FCA3F6693300D7] PRIMARY KEY CLUSTERED 
+(
+	[SeverityType_Key] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+

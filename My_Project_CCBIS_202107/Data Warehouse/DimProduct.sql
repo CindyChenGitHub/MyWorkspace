@@ -1,0 +1,21 @@
+USE [CCBISDW]
+GO
+
+/****** Object:  Table [dbo].[DimProduct]    Script Date: 7/10/2021 3:54:26 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[DimProduct](
+	[Product_Key] [int] NOT NULL,
+	[Name] [varchar](50) NULL,
+	[ProductGroup] [varchar](50) NULL,
+ CONSTRAINT [PK__DimProdu__4B3EBE2118824331] PRIMARY KEY CLUSTERED 
+(
+	[Product_Key] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
