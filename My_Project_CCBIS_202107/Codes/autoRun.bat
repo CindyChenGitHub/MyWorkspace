@@ -1,0 +1,1 @@
+"C:\Users\bluea\AppData\Local\Programs\Python\Python38-32\Python.exe" "c:/Users/bluea/Google Drive/My GitHub/MyWorkspace/My_Project_CCBIS_202107/Codes/cleaning.py"
