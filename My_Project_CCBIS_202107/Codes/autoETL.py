@@ -113,6 +113,7 @@ for file in glob.glob("*.csv"):
     non_numeric_cols = df_non_numeric.columns.values
 
     for col in df.columns:
+        # cleaning missing
         missing = df[col].isnull()
         num_missing = np.sum(missing)
         pct_missing = np.mean(missing)
@@ -133,6 +134,8 @@ for file in glob.glob("*.csv"):
                 df[col] = df[col].fillna(top)
                 LOG.info('[Missing] ' + file + ' {} - {}%'.format(col, round(pct_missing*100)) + ', ' + str(num_missing) + ' records missing - filled with "' + top + '"')
 
+        # cleaning outliner
+        df.boxplot(column=col)
     # set new file path
     dataFileName = file
     dataFileName_new = str(dataFileName)[:-4] + "_clean.csv"
