@@ -37,7 +37,7 @@ IF NOT EXISTS(SELECT IS_SRVROLEMEMBER('sysadmin', 'DA\DBA202107G2'))
 ------------------------------------------------------------
 -- Disable 'sa' user from external login to SQL Server
 ------------------------------------------------------------
-ALTER LOGIN sa DISABLED
+ALTER LOGIN sa DISABLE
 ------------------------------------------------------------
 -- Check domain group member
 ------------------------------------------------------------
