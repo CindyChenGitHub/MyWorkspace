@@ -88,6 +88,14 @@ SELECT 'EXEC [' + name + ']..sp_changedbowner ''sa'''
 	FROM sysdatabases
 	WHERE suser_sname(sid) != 'sa'
 	ORDER BY 1
+IF EXISTS
+	(SELECT *
+		FROM sysdatabases
+		WHERE suser_sname(sid) != 'sa'
+        AND suser_sname(sid) = 'DA\DaTest0179')
+	-----------------------------------------------------
+	-------------Drag the auto scripts here--------------
+	-----------------------------------------------------
 ------------------------------------------------------------
 -- Check database version
 ------------------------------------------------------------
@@ -102,9 +110,17 @@ SELECT * FROM sysdatabases
         WHERE name = 'master')
 --## change database version
 ALTER DATABASE [Orders] SET compatibility_level = 110 -- '110' is 2012 version
---## Change database version to same with server
+--## Change database version to '130' (version 2016)
 SELECT 'ALTER DATABASE [' + name + '] SET compatibility_level = 130'
 	FROM sysdatabases
 	WHERE cmptlevel NOT IN
     (SELECT cmptlevel FROM sysdatabases
         WHERE name = 'master')
+IF EXISTS
+    (SELECT * FROM sysdatabases
+    WHERE cmptlevel NOT IN
+        (SELECT cmptlevel FROM sysdatabases
+        WHERE name = 'master'))
+	-----------------------------------------------------
+	-------------Drag the auto scripts here--------------
+	-----------------------------------------------------
