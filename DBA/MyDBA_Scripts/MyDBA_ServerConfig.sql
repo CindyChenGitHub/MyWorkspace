@@ -8,6 +8,8 @@
 SELECT @@SERVERNAME as ServerName, @@SERVICENAME as ServiceName, @@VERSION as Version
 --## List all the database list in the Server (include System Datases and User Databases)
 SELECT * FROM SYS.databases
+--## to send email from SQL instance (engine)
+exec msdb..sp_send_dbmail -- ... provide parameters
 ------------------------------------------------------------
 -- Add user [NT AUTHORITY\SYSTEM] to WINDOWS login user and 'sysadmin' server roll
 ------------------------------------------------------------
@@ -43,13 +45,13 @@ ALTER LOGIN sa DISABLE
 ------------------------------------------------------------
 -- Check domain group member
 ------------------------------------------------------------
-EXEC xp_logininfo 'DA\DBAStudents2020Jan', 'members'
+EXEC xp_logininfo 'SQL2K8\SQLDBAGRP', 'members'
 ------------------------------------------------------------
 -- use T-SQL to enable Server Configuration
 ------------------------------------------------------------
 --## Enable advanced configure
 EXEC sp_configure 'show advanced options', 1
-RECONFIGURE
+--RECONFIGURE
 --## Turn on necessary Server configurations
 EXEC sp_configure 'Ad Hoc Distributed Queries', 1
 EXEC sp_configure 'backup compression default', 1
@@ -62,9 +64,13 @@ RECONFIGURE
 EXEC sp_configure
 --## Example of xp_cmdshell
 EXEC xp_cmdshell 'dir E:'
+
 --==========================================================
 -- Database level config
 --==========================================================
+------------------------------------------------------------
+-- Check database owner
+------------------------------------------------------------
 --## List database info
 EXEC sp_helpdb
 EXEC sp_helpdb Orders
@@ -75,13 +81,16 @@ SELECT name, sid [Current owner ID], suser_sname(sid) [Current owner name]
 SELECT name, sid [Current owner ID], suser_sname(sid) [Current owner name]
     FROM sysdatabases
     WHERE suser_sname(sid) != 'sa'
+    ORDER BY 1
 --## Change database owner to 'sa'
-Alter DATABASE
-    (SELECT name
-        FROM sysdatabases
-        WHERE suser_sname(sid) != 'sa')
-    SET OWNER = 'sa'
-
+--EXEC Orders..sp_changedbowner 'sa'
+SELECT 'EXEC [' + name + ']..sp_changedbowner ''sa'''
+	FROM sysdatabases
+	WHERE suser_sname(sid) != 'sa'
+	ORDER BY 1
+------------------------------------------------------------
+-- Check database version
+------------------------------------------------------------
 --## List database version
 SELECT @@version  --'130' is version 2016
 SELECT name, cmptlevel [DB Version] FROM sysdatabases
@@ -89,16 +98,13 @@ SELECT name, cmptlevel [DB Version] FROM sysdatabases
 --## List databases that version not same with server    
 SELECT * FROM sysdatabases
     WHERE cmptlevel NOT IN
-    (SELECT cmptlevelFROM sysdatabases
+    (SELECT cmptlevel FROM sysdatabases
         WHERE name = 'master')
 --## change database version
-ALTER DATABASE [AdventureWorks] SET compatibility_level = 110 -- '110' is 2012 version
+ALTER DATABASE [Orders] SET compatibility_level = 110 -- '110' is 2012 version
 --## Change database version to same with server
-ALTER DATABASE 
-    (SELECT name FROM sysdatabases
-        WHERE cmptlevel NOT IN
-        (SELECT cmptlevel FROM sysdatabases
-            WHERE name = 'master'))
-    SET compatibility_level = 
-        (SELECT cmptlevel FROM sysdatabases
-            WHERE name = 'master')
+SELECT 'ALTER DATABASE [' + name + '] SET compatibility_level = 130'
+	FROM sysdatabases
+	WHERE cmptlevel NOT IN
+    (SELECT cmptlevel FROM sysdatabases
+        WHERE name = 'master')

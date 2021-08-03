@@ -1,9 +1,9 @@
 ------------------------------------------------------------
 -- Display database info (include logic files)
 ------------------------------------------------------------
+--## List database info
 EXEC sp_helpdb
 EXEC sp_helpdb Orders
-
 --## display current owner
 SELECT name, sid [Current owner ID], suser_sname(sid) [Current owner name]
 FROM sysdatabases
@@ -13,22 +13,16 @@ FROM sysdatabases
 -- auto create .mdf in Data folder and .ldf in Log folder as setup when pos-config
 CREATE DATABASE Testing1
 ------------------------------------------------------------
--- Create Database from .mdf .ldf
-------------------------------------------------------------
---Create Database from 
-CREATE DATABASE 0179Orders 
-    ON (FILENAME = 'E:\G2SQLData\PROD\0179Orders_Data.mdf'), 
-    (FILENAME = 'F:\G2SQLData\PROD\0179Orders_Data.ldf') 
-    FOR ATTACH; 
-------------------------------------------------------------
 -- Backup Database to .bak files
 ------------------------------------------------------------
 -- Initial (Full) backup for database mirroring
 BACKUP DATABASE AdventureWorks TO
     DISK='F:\SQLBackup\AW_Full.BAK'
+    WITH COMPRESSION
 -- Backup T-Log for initialize of mirroring
 BACKUP LOG AdventureWorks TO
     DISK='F:\SQLBackup\AW_TLog.TRN'
+    WITH COMPRESSION
 ------------------------------------------------------------
 -- Check logic file info from .bak
 ------------------------------------------------------------
@@ -59,9 +53,13 @@ WITH MOVE 'AdventureWorks_Data' TO 'E:\G2SQLData\PROD\0179AdventureWorks_Data.md
      MOVE 'AdventureWorks_log' TO 'F:\G2SQLLog\PROD\0179AdventureWorks_Log.ldf'
      --, REPLACE
 ------------------------------------------------------------
--- Create Database attach from .mdf .ldf
+-- Create Database from attach .mdf .ldf
 ------------------------------------------------------------
 CREATE DATABASE Testing7 
     ON (FILENAME = 'C:\SQLDataBase\PROD\SQLData\Testing1.mdf')
 	--,(FILENAME = 'C:\SQLDataBase\PROD\SQLLog\Testing1_log.ldf') 
     FOR ATTACH;
+/*
+File activation failure. The physical file name "C:\SQLDBF\AdventureWorks_Log.ldf" may be incorrect.
+New log file 'F:\SQLLog\PRD\AdventureWorks_log.ldf' was created.
+*/
