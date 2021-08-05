@@ -10,6 +10,9 @@ SELECT @@SERVERNAME as ServerName, @@SERVICENAME as ServiceName, @@VERSION as Ve
 SELECT * FROM SYS.databases
 --## to send email from SQL instance (engine)
 exec msdb..sp_send_dbmail -- ... provide parameters
+--## Build-in error messages
+SELECT * FROM master.sys.messages
+SELECT * FROM master..syslanguages
 ------------------------------------------------------------
 -- Add user [NT AUTHORITY\SYSTEM] to WINDOWS login user and 'sysadmin' server roll
 ------------------------------------------------------------
@@ -124,3 +127,10 @@ IF EXISTS
 	-----------------------------------------------------
 	-------------Drag the auto scripts here--------------
 	-----------------------------------------------------
+------------------------------------------------------------
+-- Check and set database to FULL RECOVERY mode
+------------------------------------------------------------
+ALTER DATABASE [0179Orders] SET RECOVERY FULL
+SELECT 'ALTER DATABASE [' + name + '] SET RECOVERY FULL'
+	FROM sysdatabases
+	WHERE name LIKE '0179%'

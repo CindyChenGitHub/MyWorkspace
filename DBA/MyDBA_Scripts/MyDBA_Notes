@@ -4,3 +4,7 @@
 -- Problem: Sometimes is 0 if not exists, then the next statement will not exec 
 IF NOT EXISTS(SELECT IS_SRVROLEMEMBER('sysadmin', 'SQL2K8\SQLSRVGRP')) 
     EXEC sp_addsrvrolemember 'SQL2K8\SQLSRVGRP', 'sysadmin'
+
+SQL Commond
+SQLCMD /?                       --查看可用的SQL commond
+SQLCMD -S DBAPROD100\SQL2016PRDG2 -E      -- 进入（登录）SQL Server 'DBAPROD100\SQL'
