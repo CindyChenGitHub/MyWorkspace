@@ -134,3 +134,6 @@ ALTER DATABASE [0179Orders] SET RECOVERY FULL
 SELECT 'ALTER DATABASE [' + name + '] SET RECOVERY FULL'
 	FROM sysdatabases
 	WHERE name LIKE '0179%'
+	-----------------------------------------------------
+	-------------Drag the auto scripts here--------------
+	-----------------------------------------------------

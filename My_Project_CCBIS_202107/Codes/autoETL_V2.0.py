@@ -26,7 +26,7 @@ my_path_CCBISDW = my_path + "\CCBISDW"
 my_path_cleaned = my_path + "\cleaned"
 directors =  [my_path_CCBIS, my_path_CCBISDW, my_path_cleaned]
 
-# Set file name
+# Set file names
 log_fileName = time.strftime("%Y%m%d") + '_CCBIS.log'
 audit_fileName = time.strftime("%Y%m%d") + '_CCBIS_audit.xlsx'
 
