@@ -96,6 +96,15 @@ for index, row in tbls.iterrows():
     # Read from SQL Server CCBIS
     query = "SELECT * FROM [dbo].[" + row['TABLE_NAME'] + "]"  
     df = pandas.read_sql(query, sql_conn)
+    # Convert boolean and float to int
+    if tableName == 'DimCustomer':
+        d = {'True': 1, 'False': 0}
+        df['NameStyle'].map(d)
+    if tableName == 'CDR':
+        #for col in df.columns:
+        #    if col == 'NPS':
+        #col = df['NameStyle']
+        df['NPS'] = df['NPS'].split(".")[0]           
     # Write to CCBIS/*.csv
     try:
         df.to_csv(my_path_CCBIS + "/" + tableName + '.csv', index=False)

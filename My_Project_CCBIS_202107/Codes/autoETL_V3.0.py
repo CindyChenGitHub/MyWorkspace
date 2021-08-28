@@ -1,0 +1,249 @@
+#=============================================================================
+#=== Install and import necessary modules
+#=============================================================================
+from import_neccessary_modules import *
+modules = ['os', 'pandas', 'pyodbc', 'numpy', 'glob', 'seaborn', 'matplotlib', 'logging', 'time']
+for module in modules:
+    import_neccessary_modules(module)
+
+import os
+import pandas
+import pyodbc
+import numpy as np
+import glob
+import seaborn as sns
+import matplotlib.pyplot as plt
+import logging
+import time
+import xlwt
+#=============================================================================
+#=== Set path and config
+#=============================================================================
+
+# Set path
+my_path = r"C:\MyDataFiles\Data_CCBIS_202107"
+my_path_CCBIS = my_path + "\CCBIS"
+my_path_CCBISDW = my_path + "\CCBISDW"
+my_path_cleaned = my_path + "\cleaned"
+directors =  [my_path_CCBIS, my_path_CCBISDW, my_path_cleaned]
+
+# Set file names
+log_fileName = time.strftime("%Y%m%d") + '_CCBIS.log'
+audit_fileName = time.strftime("%Y%m%d") + '_CCBIS_audit.xls'
+audit_fullPath = os.path.join(my_path, audit_fileName)
+
+# Set log file
+os.chdir(my_path)
+LOG = logging.getLogger(log_fileName)
+LOG.setLevel(logging.DEBUG)
+# Create file handler which logs even debug messages
+fh = logging.FileHandler(log_fileName, 'w') # 'w'-overwrite; 'a'-append
+fh.setLevel(logging.INFO)
+# Create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# Create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s : [%(levelname)s] %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+# Add the handlers to the logger
+LOG.addHandler(fh)
+LOG.addHandler(ch)
+
+# Check path
+if not os.path.exists(my_path):
+    os.makedirs(my_path)
+    LOG.info("Directory created: " + my_path)
+# Clean log files
+else:
+    logExtension = ".log"
+    auditExtension = '.xlsx'
+    for root_folder, folders, files in os.walk(my_path):
+        for file in files:
+            file_path = os.path.join(root_folder, file)
+            file_extension = os.path.splitext(file)[1]
+            if file_extension == logExtension and file != log_fileName:
+                if not os.remove(file_path):
+                    LOG.info("File deleted successfully: " + file_path)
+                else:
+                    LOG.info("Unable to delete the " + file_path)
+            if file_extension == auditExtension and file != audit_fileName:
+                if not os.remove(file_path):
+                    LOG.info("File deleted successfully: " + file_path)
+                else:
+                    LOG.info("Unable to delete the " + file_path)
+
+# Create directors
+for director in directors:
+    if not os.path.exists(director):
+        os.makedirs(director)
+        LOG.debug('\nDirectory created: ' + director)
+# Set auditExcel
+auditExcel = xlwt.Workbook()
+sheet1 = auditExcel.add_sheet('Files')
+adtExcSh1Row = 0
+sheet1.write(0, 0, 'File')
+sheet1.write(0, 1, 'CreatedTime')
+sheet1.write(0, 2, 'Path')
+sheet2 = auditExcel.add_sheet('Cleansing')
+adtExcSh2Row = 0
+sheet2.write(0, 0, 'Database')
+sheet2.write(0, 1, 'Table')
+sheet2.write(0, 2, 'Column')
+sheet2.write(0, 3, 'Value')
+sheet2.write(0, 4, 'issue')
+#=============================================================================
+#=== Extract from CCBIS to CSV
+#=============================================================================
+LOG.info('==== Extract: from CCBIS(SQL Server) ====')
+# Set up SQL Server connector
+os.chdir(my_path_CCBIS)
+sql_conn = pyodbc.connect('DRIVER={SQL Server}; SERVER=localhost; DATABASE=CCBIS; UID=sa; PWD=SQLServer2019')
+
+# Get table name list
+LOG.info('The tables are creating in ' + my_path_CCBIS + ':')
+tables = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME != 'sysdiagrams'"
+tbls = pandas.read_sql(tables, sql_conn)
+
+for index, row in tbls.iterrows():
+    tableName = row['TABLE_NAME']
+    LOG.info('--' + str(index+1) + '. ' + tableName + '.csv')  
+    # Read from SQL Server CCBIS
+    query = "SELECT * FROM [dbo].[" + row['TABLE_NAME'] + "]"  
+    df = pandas.read_sql(query, sql_conn)
+    # Convert boolean and float to int
+    if tableName == 'DimCustomer':
+        d = {'True': 1, 'False': 0}
+        df['NameStyle'].map(d)
+    # if tableName == 'CDR':
+    #     query = "use CCBIS ALTER TABLE dbo.CDR ALTER COLUMN NPS int;"  
+    #     df = pandas.read_sql(query, sql_conn)
+        #for col in df.columns:
+        #    if col == 'NPS':
+                #s = pandas.Series(df['NPS'])
+
+                #col = int(col[:-2])
+        #        pandas.to_numeric(col, downcast = 'integer', errors = 'ignore')
+                #df['NPS'] = int(df['NPS'])
+                
+                #pandas.to_numeric(s, downcast = 'integer', errors = 'ignore')
+        #df['NPS'] = df['NPS'].split(".")[0]           
+    # Write to CCBIS/*.csv
+    try:
+        df.to_csv(my_path_CCBIS + "/" + tableName + '.csv', index=False)
+        adtExcSh1Row = adtExcSh1Row + 1
+        sheet1.write(adtExcSh1Row, 0, str(tableName + '.csv'))
+        sheet1.write(adtExcSh1Row, 1, time.asctime())
+        sheet1.write(adtExcSh1Row, 2, my_path_CCBIS)
+    except:
+        tb = sys.exc_info()[2]
+        LOG.warn('**** File did NOT update successfully. Please try again after make sure file is not opened and have pomission to write. - ' + my_path_CCBIS + "/" + tableName + '.csv')
+        continue
+
+LOG.info('Extract Completed Successfully - ' + str(len(os.listdir('.'))) + ' files created in ' + my_path_CCBIS)  
+
+#=============================================================================
+#=== Cleaning: duplication, missing, outline
+#=============================================================================
+
+# Cleaning
+os.chdir(my_path_CCBIS)
+#colours = ['#000099', '#ffff00'] # specify the colours - yellow is missing. blue is not missing.
+LOG.info("==== Cleaning Start ====")
+for file in glob.glob("*.csv"):
+    tableName = str(file)[:-4]    
+    cleanFile = tableName + "_clean.csv"   
+
+    # Get PK
+    pkNameQuery = "SELECT Col.Column_Name as PkName from INFORMATION_SCHEMA.TABLE_CONSTRAINTS Tab, INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE Col WHERE Col.Constraint_Name = Tab.Constraint_Name AND Col.Table_Name = Tab.Table_Name AND Constraint_Type = 'PRIMARY KEY' AND Col.Table_Name = '" + tableName +"'"
+    pkList = list(pandas.read_sql(pkNameQuery, sql_conn)["PkName"])
+
+    # Get data
+    df = pandas.read_csv(file, index_col = pkList)
+    size_org = df.shape[0]
+    cols = df.columns
+    LOG.info('From: ' + file + ' - size' + str(df.shape))
+
+    # Drop duplicate
+    df.drop_duplicates(keep="first", inplace=True)
+
+    # Print duplication info
+    size_cleaned = df.shape[0]
+    LOG.info('To    : ' + cleanFile + ' - size' + str(df.shape))
+    num_duplication = size_org - size_cleaned
+    if num_duplication > 0:
+        LOG.info('------ [Duplication] ' + str(num_duplication) + ' records dropped from ' + file)
+        adtExcSh2Row = adtExcSh2Row + 1
+        sheet2.write(adtExcSh2Row, 0, 'CCBIS')
+        sheet2.write(adtExcSh2Row, 1, tableName)
+        sheet2.write(adtExcSh2Row, 2, '-')
+        sheet2.write(adtExcSh2Row, 3, int(num_duplication))
+        sheet2.write(adtExcSh2Row, 4, 'Duplication') 
+    # Set numeric columns
+    df_numeric = df.select_dtypes(include=[np.number])
+    numeric_cols = df_numeric.columns.values
+   
+    # Set non numeric columns
+    df_non_numeric = df.select_dtypes(exclude=[np.number])
+    non_numeric_cols = df_non_numeric.columns.values
+
+    for col in df.columns:
+        # cleaning missing
+        missing = df[col].isnull()
+        num_missing = np.sum(missing)
+        pct_missing = np.mean(missing)
+             
+        if num_missing > 0: 
+
+            # Print Missing Data Percentage List - % of missing.
+            df['{}_ismissing'.format(col)] = missing
+
+
+            # When numeric, fill with midian value 
+            if col in numeric_cols:
+                med = df[col].median()
+                if col == 'NPS':
+                    med = int(med)
+                df[col] = df[col].fillna(med)
+                adtExcSh2Row = adtExcSh2Row + 1
+                sheet2.write(adtExcSh2Row, 0, 'CCBIS')
+                sheet2.write(adtExcSh2Row, 1, tableName)
+                sheet2.write(adtExcSh2Row, 2, col)
+                sheet2.write(adtExcSh2Row, 3, int(num_missing))
+                sheet2.write(adtExcSh2Row, 4, 'Missing')                 
+                LOG.info('------ [Missing] ' + file + ' - "{}" - {}%'.format(col, round(pct_missing*100)) + ', ' + str(num_missing) + ' records missed - filling with ' + str(med))
+            # When not numeric, fill with most frequent value     
+            else:
+                top = df[col].describe()['top'] # impute with the most frequent value.
+                df[col] = df[col].fillna(top)
+                adtExcSh2Row = adtExcSh2Row + 1
+                sheet2.write(adtExcSh2Row, 0, 'CCBIS')
+                sheet2.write(adtExcSh2Row, 1, tableName)
+                sheet2.write(adtExcSh2Row, 2, col)
+                sheet2.write(adtExcSh2Row, 3, int(num_missing))
+                sheet2.write(adtExcSh2Row, 4, 'Missing')   
+                LOG.info('------ [Missing] ' + file + ' - "{}" - {}%'.format(col, round(pct_missing*100)) + ', ' + str(num_missing) + ' records missed - filling with "' + top + '"')
+
+        # cleaning outliner
+        #df.boxplot(column=col)
+
+    # write to the new csf in 'cleaned' director
+    try:
+        df.to_csv(my_path_cleaned + "/" + cleanFile)
+        adtExcSh1Row = adtExcSh1Row + 1
+        sheet1.write(adtExcSh1Row, 0, str(cleanFile))
+        sheet1.write(adtExcSh1Row, 1, time.asctime())
+        sheet1.write(adtExcSh1Row, 2, my_path_cleaned)
+    except:
+        tb = sys.exc_info()[2]
+        LOG.warn('**** File did NOT update successfully. Please try again after make sure file is not opened and have pomission to write. - ' + my_path_cleaned + "/" + cleanFile)
+        continue
+    
+    os.chdir(my_path_CCBIS)
+
+auditExcel.save(audit_fullPath)
+LOG.info('Cleaning Completed Successfully - ' + str(len(os.listdir(my_path_cleaned))) + ' files created in ' + my_path_cleaned)    
+
+#=============================================================================
+#=== Transfer
+#=============================================================================

@@ -63,3 +63,9 @@ CREATE DATABASE Testing7
 File activation failure. The physical file name "C:\SQLDBF\AdventureWorks_Log.ldf" may be incorrect.
 New log file 'F:\SQLLog\PRD\AdventureWorks_log.ldf' was created.
 */
+------------------------------------------------------------
+-- (Backup and) restore Database from <database name>
+------------------------------------------------------------
+use DBA_Config_DB exec usp_Backup_Restore_Multiple_DB 'Orders', 'X1_Orders , X2_Orders , X3_Orders'
+use DBA_Config_DB exec usp_Backup_Restore_Multiple_DB 'Products', 'X1_Products , X2_Products , X3_Products'
+use DBA_Config_DB exec usp_Backup_Restore_Multiple_DB 'AdventureWorks', 'X1_AdventureWorks , X2_AdventureWorks , X3_AdventureWorks'
