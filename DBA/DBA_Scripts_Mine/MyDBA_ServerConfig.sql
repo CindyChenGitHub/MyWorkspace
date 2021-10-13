@@ -5,7 +5,7 @@
 -- Display database info (include logic files)
 ------------------------------------------------------------
 --## list some of the database system info
-SELECT @@SERVERNAME as ServerName, @@SERVICENAME as ServiceName, @@VERSION as Version
+SELECT @@SERVERNAME as ServerName, @@SERVICENAME as ServiceName, @@VERSION as Version  -- @@SERVICENAME not aviluable in Azure
 --## List all the database list in the Server (include System Datases and User Databases)
 SELECT * FROM SYS.databases
 --## to send email from SQL instance (engine)

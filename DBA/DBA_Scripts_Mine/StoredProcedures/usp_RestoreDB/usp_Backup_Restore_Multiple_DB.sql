@@ -67,5 +67,4 @@ BEGIN
 	END
 	Close dbList
 	Deallocate dbList
-	SET NOCOUNT OFF
 END
